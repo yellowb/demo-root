@@ -32,8 +32,7 @@ demo-root/
 ### Install Dependencies
 
 ```bash
-cd frontend && npm install
-cd ../backend && go mod tidy
+make setup
 ```
 
 ### Start Both Services
@@ -64,6 +63,15 @@ make reset-db
 ```
 
 This removes the local SQLite database and reboots it with demo seed data.
+
+## Contributor Workflow
+
+- First-time setup: `make setup`
+- Local development: `make dev`
+- Required verification before finishing changes: `make test`
+- Reset demo data before a presentation: `make reset-db`
+
+See [CONTRIBUTING.md](/Users/yellowb/ppt/demo-root/CONTRIBUTING.md) for the expected workflow and repo constraints.
 
 ## Seed Data
 

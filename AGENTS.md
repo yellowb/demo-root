@@ -14,6 +14,7 @@
 - 前端通过 `/api` 访问后端
 
 ## 开发命令
+- 首次进入仓库先执行：`make setup`
 - 启动开发环境：`make dev`
 - 运行验证：`make test`
 - 重置数据库并恢复种子数据：`make reset-db`
