@@ -16,6 +16,8 @@
 ## 开发命令
 - 首次进入仓库先执行：`make setup`
 - 启动开发环境：`make dev`
+  - 默认会在前端就绪后自动打开 `http://localhost:5173/`
+  - 如需关闭，使用：`AUTO_OPEN_BROWSER=0 make dev`
 - 运行验证：`make test`
 - 重置数据库并恢复种子数据：`make reset-db`
 

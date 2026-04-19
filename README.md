@@ -43,6 +43,8 @@ make dev
 
 - Frontend: [http://localhost:5173](http://localhost:5173)
 - Backend health check: [http://localhost:8080/api/health](http://localhost:8080/api/health)
+- On macOS or Linux desktops with `open` or `xdg-open` available, `make dev` will automatically open the frontend in your browser after `http://localhost:5173/` becomes reachable.
+- To disable that behavior, run: `AUTO_OPEN_BROWSER=0 make dev`
 
 ## Test and Validation
 
