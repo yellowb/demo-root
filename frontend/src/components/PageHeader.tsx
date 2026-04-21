@@ -10,8 +10,8 @@ export function PageHeader({ total, completed }: PageHeaderProps) {
         <p className="eyebrow">Agent Harness Demo Baseline</p>
         <h1>Todo workspace</h1>
         <p className="hero-copy">
-          A lightweight baseline project for the live demo. It is intentionally limited to CRUD,
-          SQLite persistence, and a clean single-page workflow.
+          A lightweight live demo project with CRUD, SQLite persistence, priority, filtering, and
+          a clean single-page workflow.
         </p>
       </div>
 

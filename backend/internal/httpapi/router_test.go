@@ -42,8 +42,9 @@ func TestTodoRoutesLifecycle(t *testing.T) {
 	router := newTestRouter(t)
 
 	created := performJSONRequest(t, router, http.MethodPost, "/api/todos", map[string]any{
-		"title": "Prepare demo environment",
-		"notes": "Confirm the baseline codebase is ready",
+		"title":    "Prepare demo environment",
+		"notes":    "Confirm the baseline codebase is ready",
+		"priority": "high",
 	})
 	if created.Code != http.StatusCreated {
 		t.Fatalf("expected status 201 on create, got %d with body %s", created.Code, created.Body.String())
@@ -97,6 +98,9 @@ func TestTodoRoutesLifecycle(t *testing.T) {
 	if createdTodo.ID == 0 {
 		t.Fatalf("expected created todo to have a non-zero id")
 	}
+	if createdTodo.Priority != todos.PriorityHigh {
+		t.Fatalf("expected created priority %q, got %q", todos.PriorityHigh, createdTodo.Priority)
+	}
 }
 
 func TestCreateTodoRejectsBlankTitle(t *testing.T) {
@@ -110,6 +114,74 @@ func TestCreateTodoRejectsBlankTitle(t *testing.T) {
 
 	if response.Code != http.StatusBadRequest {
 		t.Fatalf("expected status 400, got %d with body %s", response.Code, response.Body.String())
+	}
+}
+
+func TestTodoRoutesFilterByCompletionAndPriority(t *testing.T) {
+	t.Parallel()
+
+	router := newTestRouter(t)
+
+	activeHigh := performJSONRequest(t, router, http.MethodPost, "/api/todos", map[string]any{
+		"title":    "Prepare live demo",
+		"notes":    "Show high priority active item",
+		"priority": "high",
+	})
+	if activeHigh.Code != http.StatusCreated {
+		t.Fatalf("expected status 201 for active high todo, got %d", activeHigh.Code)
+	}
+
+	completedHigh := performJSONRequest(t, router, http.MethodPost, "/api/todos", map[string]any{
+		"title":    "Archive baseline notes",
+		"notes":    "Completed high item",
+		"priority": "high",
+	})
+	if completedHigh.Code != http.StatusCreated {
+		t.Fatalf("expected status 201 for completed high todo, got %d", completedHigh.Code)
+	}
+
+	var completedTodo todos.Todo
+	if err := json.Unmarshal(completedHigh.Body.Bytes(), &completedTodo); err != nil {
+		t.Fatalf("decode completed todo: %v", err)
+	}
+
+	updateResponse := performJSONRequest(t, router, http.MethodPatch, fmt.Sprintf("/api/todos/%d", completedTodo.ID), map[string]any{
+		"completed": true,
+	})
+	if updateResponse.Code != http.StatusOK {
+		t.Fatalf("expected status 200 on completion update, got %d", updateResponse.Code)
+	}
+
+	filterResponse := performRequest(t, router, http.MethodGet, "/api/todos?completed=false&priority=high", nil)
+	if filterResponse.Code != http.StatusOK {
+		t.Fatalf("expected status 200 on filtered list, got %d with body %s", filterResponse.Code, filterResponse.Body.String())
+	}
+
+	var filtered []todos.Todo
+	if err := json.Unmarshal(filterResponse.Body.Bytes(), &filtered); err != nil {
+		t.Fatalf("decode filtered todos: %v", err)
+	}
+	if len(filtered) != 1 {
+		t.Fatalf("expected 1 filtered todo, got %d", len(filtered))
+	}
+	if filtered[0].Completed || filtered[0].Priority != todos.PriorityHigh {
+		t.Fatalf("expected active high priority todo, got %#v", filtered[0])
+	}
+}
+
+func TestTodoRoutesRejectInvalidFilters(t *testing.T) {
+	t.Parallel()
+
+	router := newTestRouter(t)
+
+	invalidCompleted := performRequest(t, router, http.MethodGet, "/api/todos?completed=yes", nil)
+	if invalidCompleted.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400 for invalid completed filter, got %d", invalidCompleted.Code)
+	}
+
+	invalidPriority := performRequest(t, router, http.MethodGet, "/api/todos?priority=urgent", nil)
+	if invalidPriority.Code != http.StatusBadRequest {
+		t.Fatalf("expected status 400 for invalid priority filter, got %d", invalidPriority.Code)
 	}
 }
 

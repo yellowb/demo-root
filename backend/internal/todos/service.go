@@ -14,8 +14,16 @@ func NewService(repo *Repository) *Service {
 	return &Service{repo: repo}
 }
 
-func (s *Service) List(ctx context.Context) ([]Todo, error) {
-	return s.repo.List(ctx)
+func (s *Service) List(ctx context.Context, filter ListFilter) ([]Todo, error) {
+	if filter.Priority != nil {
+		priority, ok := ParsePriority(string(*filter.Priority))
+		if !ok {
+			return nil, fmt.Errorf("%w: priority must be low, medium, or high", ErrValidation)
+		}
+		filter.Priority = &priority
+	}
+
+	return s.repo.List(ctx, filter)
 }
 
 func (s *Service) Create(ctx context.Context, input CreateInput) (Todo, error) {
@@ -24,14 +32,24 @@ func (s *Service) Create(ctx context.Context, input CreateInput) (Todo, error) {
 		return Todo{}, fmt.Errorf("%w: title is required", ErrValidation)
 	}
 
+	priority := PriorityMedium
+	if input.Priority != "" {
+		parsed, ok := ParsePriority(string(input.Priority))
+		if !ok {
+			return Todo{}, fmt.Errorf("%w: priority must be low, medium, or high", ErrValidation)
+		}
+		priority = parsed
+	}
+
 	return s.repo.Create(ctx, CreateInput{
-		Title: title,
-		Notes: strings.TrimSpace(input.Notes),
+		Title:    title,
+		Notes:    strings.TrimSpace(input.Notes),
+		Priority: priority,
 	})
 }
 
 func (s *Service) Update(ctx context.Context, id int64, input UpdateInput) (Todo, error) {
-	if input.Title == nil && input.Notes == nil && input.Completed == nil {
+	if input.Title == nil && input.Notes == nil && input.Completed == nil && input.Priority == nil {
 		return Todo{}, fmt.Errorf("%w: at least one field must be provided", ErrValidation)
 	}
 
@@ -39,6 +57,7 @@ func (s *Service) Update(ctx context.Context, id int64, input UpdateInput) (Todo
 		Title:     input.Title,
 		Notes:     input.Notes,
 		Completed: input.Completed,
+		Priority:  input.Priority,
 	}
 
 	if input.Title != nil {
@@ -52,6 +71,14 @@ func (s *Service) Update(ctx context.Context, id int64, input UpdateInput) (Todo
 	if input.Notes != nil {
 		notes := strings.TrimSpace(*input.Notes)
 		normalized.Notes = &notes
+	}
+
+	if input.Priority != nil {
+		priority, ok := ParsePriority(string(*input.Priority))
+		if !ok {
+			return Todo{}, fmt.Errorf("%w: priority must be low, medium, or high", ErrValidation)
+		}
+		normalized.Priority = &priority
 	}
 
 	return s.repo.Update(ctx, id, normalized)

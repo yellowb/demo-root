@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 
-import type { Todo, TodoDraft } from "./types";
+import { TODO_PRIORITIES, type Todo, type TodoDraft } from "./types";
 
 type TodoCardProps = {
   todo: Todo;
@@ -34,9 +34,12 @@ export function TodoCard({
           <p className="todo-meta">{formatTimestamp(todo.updated_at)}</p>
           <h3>{todo.title}</h3>
         </div>
-        <span className={todo.completed ? "status-pill status-pill-done" : "status-pill"}>
-          {todo.completed ? "Completed" : "In progress"}
-        </span>
+        <div className="todo-pill-group">
+          <span className={`priority-pill priority-pill-${todo.priority}`}>{formatPriority(todo.priority)}</span>
+          <span className={todo.completed ? "status-pill status-pill-done" : "status-pill"}>
+            {todo.completed ? "Completed" : "In progress"}
+          </span>
+        </div>
       </div>
 
       {isEditing ? (
@@ -61,6 +64,22 @@ export function TodoCard({
               rows={3}
               disabled={isSaving}
             />
+          </label>
+
+          <label className="field">
+            <span>Edit priority</span>
+            <select
+              name="edit-priority"
+              value={editDraft.priority}
+              onChange={(event) => onEditChange("priority", event.target.value)}
+              disabled={isSaving}
+            >
+              {TODO_PRIORITIES.map((priority) => (
+                <option key={priority} value={priority}>
+                  {formatPriority(priority)}
+                </option>
+              ))}
+            </select>
           </label>
 
           <div className="inline-actions">
@@ -97,4 +116,8 @@ function formatTimestamp(value: string) {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+function formatPriority(value: string) {
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)} priority`;
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -15,12 +16,33 @@ func NewRepository(db *sql.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) List(ctx context.Context) ([]Todo, error) {
-	rows, err := r.db.QueryContext(ctx, `
-		SELECT id, title, notes, completed, created_at, updated_at
+func (r *Repository) List(ctx context.Context, filter ListFilter) ([]Todo, error) {
+	query := `
+		SELECT id, title, notes, completed, priority, created_at, updated_at
 		FROM todos
-		ORDER BY created_at DESC, id DESC
-	`)
+	`
+	var conditions []string
+	var args []any
+
+	if filter.Completed != nil {
+		completed := 0
+		if *filter.Completed {
+			completed = 1
+		}
+		conditions = append(conditions, "completed = ?")
+		args = append(args, completed)
+	}
+	if filter.Priority != nil {
+		conditions = append(conditions, "priority = ?")
+		args = append(args, string(*filter.Priority))
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+	query += " ORDER BY created_at DESC, id DESC"
+
+	rows, err := r.db.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("list todos: %w", err)
 	}
@@ -46,9 +68,9 @@ func (r *Repository) Create(ctx context.Context, input CreateInput) (Todo, error
 	now := time.Now().UTC().Format(time.RFC3339Nano)
 
 	result, err := r.db.ExecContext(ctx, `
-		INSERT INTO todos (title, notes, completed, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?)
-	`, input.Title, input.Notes, 0, now, now)
+		INSERT INTO todos (title, notes, completed, priority, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?)
+	`, input.Title, input.Notes, 0, input.Priority, now, now)
 	if err != nil {
 		return Todo{}, fmt.Errorf("insert todo: %w", err)
 	}
@@ -76,6 +98,9 @@ func (r *Repository) Update(ctx context.Context, id int64, input UpdateInput) (T
 	if input.Completed != nil {
 		existing.Completed = *input.Completed
 	}
+	if input.Priority != nil {
+		existing.Priority = *input.Priority
+	}
 
 	updatedAt := time.Now().UTC().Format(time.RFC3339Nano)
 	completed := 0
@@ -85,9 +110,9 @@ func (r *Repository) Update(ctx context.Context, id int64, input UpdateInput) (T
 
 	result, err := r.db.ExecContext(ctx, `
 		UPDATE todos
-		SET title = ?, notes = ?, completed = ?, updated_at = ?
+		SET title = ?, notes = ?, completed = ?, priority = ?, updated_at = ?
 		WHERE id = ?
-	`, existing.Title, existing.Notes, completed, updatedAt, id)
+	`, existing.Title, existing.Notes, completed, existing.Priority, updatedAt, id)
 	if err != nil {
 		return Todo{}, fmt.Errorf("update todo %d: %w", id, err)
 	}
@@ -122,7 +147,7 @@ func (r *Repository) Delete(ctx context.Context, id int64) error {
 
 func (r *Repository) getByID(ctx context.Context, id int64) (Todo, error) {
 	row := r.db.QueryRowContext(ctx, `
-		SELECT id, title, notes, completed, created_at, updated_at
+		SELECT id, title, notes, completed, priority, created_at, updated_at
 		FROM todos
 		WHERE id = ?
 	`, id)
@@ -145,6 +170,7 @@ type scanner interface {
 func scanTodo(source scanner) (Todo, error) {
 	var item Todo
 	var completed int
+	var priority string
 	var createdAt string
 	var updatedAt string
 
@@ -153,6 +179,7 @@ func scanTodo(source scanner) (Todo, error) {
 		&item.Title,
 		&item.Notes,
 		&completed,
+		&priority,
 		&createdAt,
 		&updatedAt,
 	); err != nil {
@@ -170,6 +197,7 @@ func scanTodo(source scanner) (Todo, error) {
 	}
 
 	item.Completed = completed == 1
+	item.Priority = Priority(priority)
 	item.CreatedAt = parsedCreatedAt
 	item.UpdatedAt = parsedUpdatedAt
 

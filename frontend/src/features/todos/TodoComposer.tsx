@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 
-import type { TodoDraft } from "./types";
+import { TODO_PRIORITIES, type TodoDraft } from "./types";
 
 type TodoComposerProps = {
   draft: TodoDraft;
@@ -45,6 +45,22 @@ export function TodoComposer({ draft, isSaving, onChange, onSubmit }: TodoCompos
           />
         </label>
 
+        <label className="field">
+          <span>Priority</span>
+          <select
+            name="priority"
+            value={draft.priority}
+            onChange={(event) => onChange("priority", event.target.value)}
+            disabled={isSaving}
+          >
+            {TODO_PRIORITIES.map((priority) => (
+              <option key={priority} value={priority}>
+                {formatPriority(priority)}
+              </option>
+            ))}
+          </select>
+        </label>
+
         <div className="form-actions">
           <button className="primary-button" type="submit" disabled={isSaving}>
             {isSaving ? "Saving..." : "Add todo"}
@@ -53,4 +69,8 @@ export function TodoComposer({ draft, isSaving, onChange, onSubmit }: TodoCompos
       </form>
     </section>
   );
+}
+
+function formatPriority(value: string) {
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)} priority`;
 }

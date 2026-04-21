@@ -35,6 +35,7 @@ body {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -172,6 +173,7 @@ button {
 }
 
 .field input,
+.field select,
 .field textarea {
   width: 100%;
   border: 1px solid rgba(20, 32, 51, 0.14);
@@ -183,6 +185,7 @@ button {
 }
 
 .field input:focus,
+.field select:focus,
 .field textarea:focus {
   outline: none;
   border-color: rgba(11, 110, 245, 0.6);
@@ -192,6 +195,17 @@ button {
 .field textarea {
   resize: vertical;
   min-height: 96px;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.filter-field {
+  max-width: 260px;
 }
 
 .form-actions,
@@ -230,6 +244,7 @@ button {
 .ghost-button:disabled,
 .danger-button:disabled,
 .field input:disabled,
+.field select:disabled,
 .field textarea:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -262,6 +277,13 @@ button {
   align-items: flex-start;
 }
 
+.todo-pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .todo-meta {
   margin: 0 0 6px;
   font-size: 0.88rem;
@@ -278,6 +300,32 @@ button {
   color: #11448e;
   font-size: 0.88rem;
   font-weight: 700;
+}
+
+.priority-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 104px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.priority-pill-high {
+  background: #fff2f1;
+  color: #a53939;
+}
+
+.priority-pill-medium {
+  background: #fff7df;
+  color: #85620f;
+}
+
+.priority-pill-low {
+  background: #eef7ed;
+  color: #2f6f42;
 }
 
 .status-pill-done {
@@ -316,6 +364,10 @@ button {
   .todo-card-top {
     flex-direction: column;
   }
+
+  .todo-pill-group {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 560px) {
@@ -333,6 +385,14 @@ button {
 
   .hero-metrics {
     grid-template-columns: 1fr;
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-field {
+    max-width: none;
   }
 
   .form-actions,

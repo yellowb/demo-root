@@ -5,12 +5,16 @@ import { createTodo, deleteTodo, fetchTodos, updateTodo } from "../../api/todos"
 import { PageHeader } from "../../components/PageHeader";
 import { TodoCard } from "./TodoCard";
 import { TodoComposer } from "./TodoComposer";
-import type { Todo, TodoDraft } from "./types";
+import { TODO_PRIORITIES, type Todo, type TodoDraft, type TodoListFilters, type TodoPriority } from "./types";
 
 const emptyDraft: TodoDraft = {
   title: "",
-  notes: ""
+  notes: "",
+  priority: "medium"
 };
+
+type CompletionFilter = "all" | "active" | "completed";
+type PriorityFilter = "all" | TodoPriority;
 
 export function TodoPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -21,17 +25,19 @@ export function TodoPage() {
   const [draft, setDraft] = useState<TodoDraft>(emptyDraft);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editDraft, setEditDraft] = useState<TodoDraft>(emptyDraft);
+  const [completionFilter, setCompletionFilter] = useState<CompletionFilter>("all");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
 
   useEffect(() => {
     void loadTodos();
-  }, []);
+  }, [completionFilter, priorityFilter]);
 
   async function loadTodos() {
     setIsLoading(true);
     setError(null);
 
     try {
-      const items = await fetchTodos();
+      const items = await fetchTodos(getActiveFilters(completionFilter, priorityFilter));
       setTodos(items);
     } catch (loadError) {
       setError(getErrorMessage(loadError, "Failed to load todos."));
@@ -41,17 +47,11 @@ export function TodoPage() {
   }
 
   function updateDraft(field: keyof TodoDraft, value: string) {
-    setDraft((current) => ({
-      ...current,
-      [field]: value
-    }));
+    setDraft((current) => updateTodoDraft(current, field, value));
   }
 
   function updateEditDraft(field: keyof TodoDraft, value: string) {
-    setEditDraft((current) => ({
-      ...current,
-      [field]: value
-    }));
+    setEditDraft((current) => updateTodoDraft(current, field, value));
   }
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
@@ -69,9 +69,12 @@ export function TodoPage() {
     try {
       const created = await createTodo({
         title,
-        notes: draft.notes.trim()
+        notes: draft.notes.trim(),
+        priority: draft.priority
       });
-      setTodos((current) => [created, ...current]);
+      if (matchesActiveFilters(created, completionFilter, priorityFilter)) {
+        setTodos((current) => [created, ...current]);
+      }
       setDraft(emptyDraft);
     } catch (createError) {
       setError(getErrorMessage(createError, "Failed to create todo."));
@@ -84,7 +87,8 @@ export function TodoPage() {
     setEditingId(todo.id);
     setEditDraft({
       title: todo.title,
-      notes: todo.notes
+      notes: todo.notes,
+      priority: todo.priority
     });
     setError(null);
   }
@@ -113,9 +117,10 @@ export function TodoPage() {
     try {
       const updated = await updateTodo(editingId, {
         title,
-        notes: editDraft.notes.trim()
+        notes: editDraft.notes.trim(),
+        priority: editDraft.priority
       });
-      setTodos((current) => current.map((todo) => (todo.id === editingId ? updated : todo)));
+      setTodos((current) => replaceOrRemoveByFilters(current, updated, completionFilter, priorityFilter));
       cancelEditing();
     } catch (saveError) {
       setError(getErrorMessage(saveError, "Failed to save changes."));
@@ -132,7 +137,7 @@ export function TodoPage() {
       const updated = await updateTodo(todo.id, {
         completed: !todo.completed
       });
-      setTodos((current) => current.map((item) => (item.id === todo.id ? updated : item)));
+      setTodos((current) => replaceOrRemoveByFilters(current, updated, completionFilter, priorityFilter));
     } catch (toggleError) {
       setError(getErrorMessage(toggleError, "Failed to update the todo."));
     } finally {
@@ -159,6 +164,16 @@ export function TodoPage() {
 
   const completedCount = todos.filter((todo) => todo.completed).length;
 
+  function handleCompletionFilterChange(value: string) {
+    setCompletionFilter(toCompletionFilter(value));
+    cancelEditing();
+  }
+
+  function handlePriorityFilterChange(value: string) {
+    setPriorityFilter(toPriorityFilter(value));
+    cancelEditing();
+  }
+
   return (
     <main className="page-shell">
       <div className="page-inner">
@@ -180,7 +195,30 @@ export function TodoPage() {
               <p className="eyebrow">Todos</p>
               <h2>Current list</h2>
             </div>
-            <p className="section-copy">The baseline intentionally has no priority or filtering controls yet.</p>
+            <p className="section-copy">Prioritize the demo work and narrow the list by status or priority.</p>
+          </div>
+
+          <div className="filter-row" aria-label="Todo filters">
+            <label className="field filter-field">
+              <span>Completion filter</span>
+              <select value={completionFilter} onChange={(event) => handleCompletionFilterChange(event.target.value)}>
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+              </select>
+            </label>
+
+            <label className="field filter-field">
+              <span>Priority filter</span>
+              <select value={priorityFilter} onChange={(event) => handlePriorityFilterChange(event.target.value)}>
+                <option value="all">All priorities</option>
+                {TODO_PRIORITIES.map((priority) => (
+                  <option key={priority} value={priority}>
+                    {formatPriority(priority)}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {isLoading ? (
@@ -198,7 +236,11 @@ export function TodoPage() {
                   todo={todo}
                   isEditing={editingId === todo.id}
                   isSaving={activeMutationId === todo.id}
-                  editDraft={editingId === todo.id ? editDraft : { title: todo.title, notes: todo.notes }}
+                  editDraft={
+                    editingId === todo.id
+                      ? editDraft
+                      : { title: todo.title, notes: todo.notes, priority: todo.priority }
+                  }
                   onEditStart={() => startEditing(todo)}
                   onEditChange={updateEditDraft}
                   onEditCancel={cancelEditing}
@@ -221,4 +263,85 @@ function getErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback;
+}
+
+function getActiveFilters(completionFilter: CompletionFilter, priorityFilter: PriorityFilter): TodoListFilters {
+  const filters: TodoListFilters = {};
+
+  if (completionFilter === "active") {
+    filters.completed = false;
+  } else if (completionFilter === "completed") {
+    filters.completed = true;
+  }
+
+  if (priorityFilter !== "all") {
+    filters.priority = priorityFilter;
+  }
+
+  return filters;
+}
+
+function matchesActiveFilters(todo: Todo, completionFilter: CompletionFilter, priorityFilter: PriorityFilter) {
+  if (completionFilter === "active" && todo.completed) {
+    return false;
+  }
+  if (completionFilter === "completed" && !todo.completed) {
+    return false;
+  }
+  if (priorityFilter !== "all" && todo.priority !== priorityFilter) {
+    return false;
+  }
+
+  return true;
+}
+
+function replaceOrRemoveByFilters(
+  current: Todo[],
+  updated: Todo,
+  completionFilter: CompletionFilter,
+  priorityFilter: PriorityFilter
+) {
+  if (!matchesActiveFilters(updated, completionFilter, priorityFilter)) {
+    return current.filter((todo) => todo.id !== updated.id);
+  }
+
+  return current.map((todo) => (todo.id === updated.id ? updated : todo));
+}
+
+function updateTodoDraft(current: TodoDraft, field: keyof TodoDraft, value: string): TodoDraft {
+  if (field === "priority") {
+    return {
+      ...current,
+      priority: toPriority(value)
+    };
+  }
+
+  return {
+    ...current,
+    [field]: value
+  };
+}
+
+function toPriority(value: string): TodoPriority {
+  return TODO_PRIORITIES.includes(value as TodoPriority) ? (value as TodoPriority) : "medium";
+}
+
+function toCompletionFilter(value: string): CompletionFilter {
+  if (value === "active" || value === "completed") {
+    return value;
+  }
+
+  return "all";
+}
+
+function toPriorityFilter(value: string): PriorityFilter {
+  if (value === "all") {
+    return "all";
+  }
+
+  return toPriority(value);
+}
+
+function formatPriority(value: string) {
+  return `${value.charAt(0).toUpperCase()}${value.slice(1)} priority`;
 }

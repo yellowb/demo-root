@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -35,7 +36,13 @@ func (h handler) health(c *gin.Context) {
 }
 
 func (h handler) listTodos(c *gin.Context) {
-	items, err := h.service.List(c.Request.Context())
+	filter, err := parseListFilter(c)
+	if err != nil {
+		writeError(c, err)
+		return
+	}
+
+	items, err := h.service.List(c.Request.Context(), filter)
 	if err != nil {
 		writeError(c, err)
 		return
@@ -104,6 +111,33 @@ func parseID(raw string) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func parseListFilter(c *gin.Context) (todos.ListFilter, error) {
+	var filter todos.ListFilter
+
+	if raw, ok := c.GetQuery("completed"); ok {
+		switch raw {
+		case "true":
+			completed := true
+			filter.Completed = &completed
+		case "false":
+			completed := false
+			filter.Completed = &completed
+		default:
+			return todos.ListFilter{}, fmt.Errorf("%w: completed must be true or false", todos.ErrValidation)
+		}
+	}
+
+	if raw, ok := c.GetQuery("priority"); ok {
+		priority, valid := todos.ParsePriority(raw)
+		if !valid {
+			return todos.ListFilter{}, fmt.Errorf("%w: priority must be low, medium, or high", todos.ErrValidation)
+		}
+		filter.Priority = &priority
+	}
+
+	return filter, nil
 }
 
 func writeError(c *gin.Context, err error) {
