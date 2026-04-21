@@ -52,6 +52,14 @@ make dev
 - On macOS or Linux desktops with `open` or `xdg-open` available, `make dev` will automatically open the frontend in your browser after `http://localhost:5173/` becomes reachable.
 - To disable that behavior, run: `AUTO_OPEN_BROWSER=0 make dev`
 
+### Stop Local Services
+
+```bash
+make stop
+```
+
+This force-stops processes listening on the demo frontend and backend ports, `5173` and `8080`.
+
 ## Lint
 
 ```bash
@@ -104,6 +112,7 @@ This removes the local SQLite database and reboots it with demo seed data.
 
 - First-time setup: `make setup`
 - Local development: `make dev`
+- Stop local dev services: `make stop`
 - Backend lint: `make lint`
 - OpenSpec validation: `make validate-specs`
 - Required verification before finishing changes: `make test`

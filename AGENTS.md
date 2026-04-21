@@ -19,6 +19,7 @@
 - 启动开发环境：`make dev`
   - 默认会在前端就绪后自动打开 `http://localhost:5173/`
   - 如需关闭，使用：`AUTO_OPEN_BROWSER=0 make dev`
+- 停止开发环境并释放端口：`make stop`
 - 运行后端 lint：`make lint`
 - 运行 OpenSpec 规格验证：`make validate-specs`
 - 运行验证：`make test`
