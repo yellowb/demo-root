@@ -50,6 +50,14 @@ make dev
 - On macOS or Linux desktops with `open` or `xdg-open` available, `make dev` will automatically open the frontend in your browser after `http://localhost:5173/` becomes reachable.
 - To disable that behavior, run: `AUTO_OPEN_BROWSER=0 make dev`
 
+## Lint
+
+```bash
+make lint
+```
+
+This runs the pinned repo-local `golangci-lint` against the Go backend. `make setup` installs that pinned version into `.bin/` when needed.
+
 ## Test and Validation
 
 ```bash
@@ -58,6 +66,7 @@ make test
 
 This runs:
 
+- `golangci-lint run ./...` for the backend
 - `go test ./...`
 - `npm run typecheck`
 - `npm run build`
@@ -86,6 +95,7 @@ This removes the local SQLite database and reboots it with demo seed data.
 
 - First-time setup: `make setup`
 - Local development: `make dev`
+- Backend lint: `make lint`
 - Required verification before finishing changes: `make test`
 - Reset demo data before a presentation: `make reset-db`
 

@@ -24,7 +24,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("bootstrap backend: %v", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	if bootstrapOnly {
 		log.Printf("database ready at %s", cfg.DBPath)

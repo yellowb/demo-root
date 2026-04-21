@@ -24,7 +24,7 @@ func (r *Repository) List(ctx context.Context) ([]Todo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("list todos: %w", err)
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var items []Todo
 	for rows.Next() {

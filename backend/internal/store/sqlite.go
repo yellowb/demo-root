@@ -111,7 +111,7 @@ func SeedDemoData(ctx context.Context, db *sql.DB) error {
 		_ = tx.Rollback()
 		return fmt.Errorf("prepare seed statement: %w", err)
 	}
-	defer stmt.Close()
+	defer func() { _ = stmt.Close() }()
 
 	for _, todo := range demoSeedTodos() {
 		timestamp := todo.CreatedAt.UTC().Format(time.RFC3339Nano)

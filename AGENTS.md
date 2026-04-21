@@ -19,6 +19,7 @@
 - 启动开发环境：`make dev`
   - 默认会在前端就绪后自动打开 `http://localhost:5173/`
   - 如需关闭，使用：`AUTO_OPEN_BROWSER=0 make dev`
+- 运行后端 lint：`make lint`
 - 运行验证：`make test`
 - 重置数据库并恢复种子数据：`make reset-db`
 
@@ -56,6 +57,7 @@
   - 种子数据
   - README（如果启动或验证方式变化）
 - 完成前必须运行 `make test`。
+- `make test` 包含后端 `golangci-lint`、后端测试、前端类型检查和前端构建。
 - 本 repo 配置了 Codex `Stop` hook：当 Codex App 在本仓库根目录运行且检测到未提交改动时，hook 会自动触发 `make test`。
 - 最终回复必须说明验证结果；如果验证由 Codex hook 触发，也要明确说明。
 - 如果改动影响演示初始状态，确保 `make reset-db` 后仍然有适合 demo 的种子数据。
