@@ -4,6 +4,7 @@
 - 这是 Agent Harness 分享用的 Todo List baseline codebase。
 - 当前仓库的目标是提供 **live demo 前的基线项目**。
 - 在没有明确要求前，**不要提前实现** `priority`、过滤、搜索、标签、截止日期、登录、多人协作。
+- 做 live demo feature 前，先阅读 `docs/live-demo-context.md`，理解这次演示服务的是 Agent Harness 工作流，而不只是功能开发。
 
 ## 技术栈与结构
 - 前端：`frontend/`，React + Vite + TypeScript
@@ -55,4 +56,6 @@
   - 种子数据
   - README（如果启动或验证方式变化）
 - 完成前必须运行 `make test`。
+- 本 repo 配置了 Codex `Stop` hook：当 Codex App 在本仓库根目录运行且检测到未提交改动时，hook 会自动触发 `make test`。
+- 最终回复必须说明验证结果；如果验证由 Codex hook 触发，也要明确说明。
 - 如果改动影响演示初始状态，确保 `make reset-db` 后仍然有适合 demo 的种子数据。

@@ -12,12 +12,12 @@ mkdir -p "${MOCK_BIN_DIR}" "${LOG_DIR}"
 
 cat > "${MOCK_BIN_DIR}/go" <<EOF
 #!/usr/bin/env bash
-sleep 1
+sleep 3
 EOF
 
 cat > "${MOCK_BIN_DIR}/npm" <<EOF
 #!/usr/bin/env bash
-sleep 1
+sleep 3
 EOF
 
 cat > "${MOCK_BIN_DIR}/curl" <<EOF

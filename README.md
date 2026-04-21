@@ -13,6 +13,8 @@ This repository is the baseline Todo List project for the Agent Harness live dem
 ```text
 demo-root/
 ├── Makefile
+├── docs/
+├── .codex/
 ├── scripts/
 ├── frontend/
 └── backend/
@@ -20,6 +22,8 @@ demo-root/
 
 - `frontend/`: SPA UI, API client, Todo page and styles
 - `backend/`: Go API server, SQLite bootstrap, Todo repository and handlers
+- `docs/`: live demo context for fresh Codex sessions
+- `.codex/`: repo-local Codex hook configuration
 - `scripts/`: short command wrappers for local dev, tests, and DB reset
 
 ## Local Run
@@ -57,6 +61,18 @@ This runs:
 - `go test ./...`
 - `npm run typecheck`
 - `npm run build`
+
+It also validates the repo-local Codex hook configuration before running the app checks.
+
+## Live Demo Context
+
+Before starting a fresh Codex session for the live demo, read [docs/live-demo-context.md](/Users/yellowb/ppt/demo-root/docs/live-demo-context.md). It explains how this Todo app supports the Agent Harness talk, why the baseline intentionally lacks `priority + filtering`, and which prompt to use for the feature demo.
+
+## Codex Hook Verification
+
+This repository includes a repo-local Codex `Stop` hook in [.codex/hooks.json](/Users/yellowb/ppt/demo-root/.codex/hooks.json). When the Codex App is opened at `/Users/yellowb/ppt/demo-root` and there are repository changes, the hook runs `make test` before the final response.
+
+This is a demo-oriented Harness gate, not a 100% impossible-to-bypass security boundary. It makes validation visible and repeatable during the live demo, while CI remains the stronger remote verification layer after changes are pushed.
 
 ## Reset the Database
 
