@@ -17,7 +17,7 @@ The key message is that real coding tasks need more than a clear prompt. They al
 This demo should make four repository-level Harness practices visible:
 
 1. Context engineering: `AGENTS.md` defines project positioning, stack, boundaries, API shape, and workflow constraints; `openspec/specs/todo-management/spec.md` captures the current Todo baseline as an executable spec reference.
-2. Unified execution entrypoints: `Makefile` exposes `setup`, `dev`, `test`, and `reset-db` so the Agent does not need to guess how to run the project.
+2. Unified execution entrypoints: `Makefile` exposes `setup`, `dev`, `stop`, `test`, and `reset-db` so the Agent does not need to guess how to run or reset the project.
 3. Validation loop: `make test` validates OpenSpec specs, backend checks, frontend checks, and Codex hook configuration; the Codex `Stop` hook runs it before a final response when repository changes exist.
 4. Specified change entrypoint: OpenSpec lets the Agent turn a feature request into `proposal.md`, `design.md`, and `tasks.md` before editing application code.
 

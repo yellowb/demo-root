@@ -1,10 +1,13 @@
-.PHONY: setup dev lint test validate-specs reset-db
+.PHONY: setup dev stop lint test validate-specs reset-db
 
 setup:
 	./scripts/setup.sh
 
 dev:
 	./scripts/dev.sh
+
+stop:
+	./scripts/stop.sh
 
 lint:
 	./scripts/lint.sh
