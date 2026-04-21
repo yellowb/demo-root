@@ -14,6 +14,7 @@ This repository is the baseline Todo List project for the Agent Harness live dem
 demo-root/
 ├── Makefile
 ├── docs/
+├── openspec/
 ├── .codex/
 ├── scripts/
 ├── frontend/
@@ -23,6 +24,7 @@ demo-root/
 - `frontend/`: SPA UI, API client, Todo page and styles
 - `backend/`: Go API server, SQLite bootstrap, Todo repository and handlers
 - `docs/`: live demo context for fresh Codex sessions
+- `openspec/`: baseline capability specs and future change proposals
 - `.codex/`: repo-local Codex hook configuration
 - `scripts/`: short command wrappers for local dev, tests, and DB reset
 
@@ -66,12 +68,19 @@ make test
 
 This runs:
 
+- `openspec validate todo-management --specs`
 - `golangci-lint run ./...` for the backend
 - `go test ./...`
 - `npm run typecheck`
 - `npm run build`
 
-It also validates the repo-local Codex hook configuration before running the app checks.
+It also validates the repo-local Codex hook configuration before running the app checks. OpenSpec telemetry is disabled for validation so the command stays deterministic in local and CI environments.
+
+To run only the OpenSpec validation:
+
+```bash
+make validate-specs
+```
 
 ## Live Demo Context
 
@@ -96,6 +105,7 @@ This removes the local SQLite database and reboots it with demo seed data.
 - First-time setup: `make setup`
 - Local development: `make dev`
 - Backend lint: `make lint`
+- OpenSpec validation: `make validate-specs`
 - Required verification before finishing changes: `make test`
 - Reset demo data before a presentation: `make reset-db`
 

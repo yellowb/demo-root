@@ -8,6 +8,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
   cd "${ROOT_DIR}"
   python3 -m json.tool .codex/hooks.json >/dev/null
   bash -n .codex/hooks/stop_make_test.sh
+  bash ./scripts/validate-specs.sh
 )
 
 (
